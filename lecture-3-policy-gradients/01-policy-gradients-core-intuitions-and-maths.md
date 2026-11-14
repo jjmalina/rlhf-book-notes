@@ -14,6 +14,8 @@ The whole answer is:
 
 Everything in this section either proves that this simple rule is mathematically correct, or makes it less noisy.
 
+*(Forward pointer: DPO, in lecture 6, uses the same rule without generating anything. It pushes the chosen answer's log-prob up and the rejected one's down, scaled by a weight that is bigger when the model currently ranks them the wrong way round. See `../lecture-6-dpo/04-derivation-the-loss-and-gradient.md`.)*
+
 One example is used throughout. Prompt: *"What's 2+2?"* The model samples 4 answers, and the reward model scores them:
 
 | Completion | Reward |

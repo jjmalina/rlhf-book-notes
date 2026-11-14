@@ -95,6 +95,8 @@ Lambert: actors "end up being the compute bottleneck," so you typically have man
 
 In lecture 3's timeline, steps 1–5 (generate, score, compute advantages) and steps 6–7 (loss, update) were one sequence. **Async infrastructure runs them as a pipeline**: while the learner does steps 6–7 on batch *n*, the actors are already doing steps 1–2 for batch *n+1* (or *n+2*) with the weights from the last sync.
 
+For multi-turn tool use (lecture 11), the actors also drive pools of **sandboxes**. Rollout lengths get a long tail, weight syncs can land in the middle of one rollout, and GRPO waits for the slowest of its G. See the actors-plus-sandboxes diagram in `../lecture-11-tools-and-agents/04-training-for-tool-use-and-takeaways.md`.
+
 ---
 
 ## Slide: "More resources on RL implementations"

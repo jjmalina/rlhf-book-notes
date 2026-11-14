@@ -59,6 +59,8 @@ Code comments like `# (B, L)` give a tensor's shape (its dimensions):
 → more minibatches/epochs on the same cached batch, or back to 1
 ```
 
+On the `per_token_kl` line: `new − ref` is the simplest of three per-token KL estimators (k1, k2, k3), which are explained in `../lecture-10-regularization/`. On-policy distillation (lecture 7) uses the same line with **teacher** log-probs in place of `ref_logps`, as the advantage rather than a penalty.
+
 ## PPO's differences
 
 ```
@@ -91,6 +93,8 @@ TRAINING PHASE adds:
 | **Current values** (PPO) | **every step** | – | the critic changes every step |
 
 **The rule:** anything in the denominator or "fixed data" side is cached. Anything that depends on the weights being trained is recomputed. ρ = fresh ÷ cached.
+
+*(DPO, lecture 6, applies the same rule with no rollout phase: ref log-probs for every pair are cached **once for the whole run**, and only the policy's log-probs are recomputed each step. See the DPO cached-vs-recomputed table in `../lecture-6-dpo/07-dpo-implementation-details.md`.)*
 
 ## `compute_log_probs` is called on three models at three times
 
@@ -170,3 +174,6 @@ In async setups (`04`), `old_logps` often come straight from the generation engi
 | 6 (aggregation) | Empty completion (immediate EOS), dividing by `mask.sum()` = 0 | **NaN** |
 | 6 (PPO) | `targets` not detached | The critic "learns" by moving its own target |
 | 6 (aggregation) | Unexamined normalization choice | Answer length drifts during training (`06`) |
+| 2 → 6 (async) | `old_logps` from the inference engine (vLLM) don't match the trainer's for the same weights (low-precision LM head) | ρ ≠ 1 with no real change, so spurious clipping and instability. Fix: run the LM head in FP32 (lecture 5 `02`, MiniMax-M1) |
+| 2 (multi-turn) | Tool-output or template-inserted tokens left in `completion_mask` | Model trains on text the environment wrote. In agentic rollouts the mask must be **striped**: 1 only on tokens the model sampled (lecture 11 `03`) |
+| 2 → 6 (multi-turn) | Rollout re-rendered from text and re-tokenized instead of keeping the sampled token IDs | Tokens and saved `old_logps` no longer line up, so ρ is garbage with no crash. Keep the sampled IDs (lecture 11 `03`) |

@@ -12,7 +12,7 @@ Covers so far: `01-policy-gradients-core-intuitions-and-maths.md`, `02-wiring-rl
 |---|---|---|
 | **Policy** π_θ | The LLM being trained | ✅ Yes, once per step (at the optimizer step) |
 | **Reference** π_ref | Frozen copy of the policy from the start of the run (the SFT checkpoint) | ❌ Never |
-| **Reward model** | Scores completions (in RLVR, replaced by a verifier program) | ❌ Never (trained in an earlier stage) |
+| **Reward model** | Scores completions (in RLVR, replaced by a verifier program) | ❌ Never (trained in an earlier stage: see `../lecture-8-preference-data/00-map.md`) |
 | **Value model** V_φ *(PPO only)* | The critic: predicts expected reward at each token | ✅ Yes, trained alongside the policy by regression |
 
 ---
@@ -129,6 +129,8 @@ step 500      = original + 499 updates        original            larger (if it 
 
 With one update per batch (as in the loop above), π_old is the same as the policy at the moment of the update, so it doesn't matter yet. It starts to matter when PPO takes **several** updates on one batch.
 
+*(Forward pointer: by 2026 much of the regularization moved from π_ref to π_old, i.e. keep the trainer close to the sampler rather than to the start of the run. See `../lecture-10-regularization/04-other-regularization-tools.md`.)*
+
 ---
 
 ## Where each idea from the notes plugs in
@@ -170,6 +172,26 @@ Every algorithm runs the same loop. They differ in **how step 5 computes the bas
 | **GRPO** | **G per prompt** | group **mean ÷ std** (z-score), same prompt | 1 or several (PPO-style clipping) | none |
 | **GSPO** | G per prompt | like GRPO | like GRPO, but **one ratio per completion** | none |
 | **CISPO** | G per prompt | like GRPO | ratio weight **capped**, tokens never switched off | none |
+
+Two relatives from later lectures, shown on the same columns:
+
+| Method | Step 2 | Step 3 | Step 4 | Step 5 "advantage" | Notes |
+|---|---|---|---|---|---|
+| **DPO** (lecture 6) | **none**: fixed (chosen, rejected) pairs collected beforehand | **none**: no reward model | ref log-probs cached **once for the whole run** | a weight on chosen vs. rejected log-probs, bigger when the current ranking is wrong | `../lecture-6-dpo/00-map.md` |
+| **On-policy distillation** (lecture 7) | the student generates (as in RL) | **none** | the **teacher** sits in π_ref's seat | per-token log π_teacher − log π_student (the KL term with β = 1 *is* the advantage) | `../lecture-7-synthetic-data/02-teacher-student-knowledge-distillation.md` |
+
+---
+
+## Later lectures that plug into this loop
+
+| Idea | Step | Where |
+|---|---|---|
+| Where the reward model comes from (preference data → Bradley–Terry RM, trained before the loop) | before 1; used at 3 | `../lecture-8-preference-data/00-map.md` |
+| Over-optimization: the policy exploits the frozen RM as KL grows | 3, 5, 7 across steps | `../lecture-9-over-optimization/02-over-optimization-and-goodharts-law.md` |
+| What the KL penalty really is (reverse KL), the k1/k2/k3 estimators, why β = 0 can survive | 4–6 | `../lecture-10-regularization/00-map.md` |
+| 2026 shift: regularize toward **π_old** (the sampler: DPPO, IcePop) instead of π_ref | 6 | `../lecture-10-regularization/04-other-regularization-tools.md` |
+| Multi-turn tool rollouts: step 2 becomes an orchestrator loop (generate → run tool → append → resume), step 3 runs in the environment | 2–3 | `../lecture-11-tools-and-agents/00-map.md` |
+| Evaluation happens **outside** steps 1–7, on frozen checkpoints; nothing from it enters a gradient | between batches / after the run | `../lecture-12-evaluation/00-map.md` |
 
 ---
 

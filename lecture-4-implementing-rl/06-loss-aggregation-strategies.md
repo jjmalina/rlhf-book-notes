@@ -137,6 +137,8 @@ token's push  =  advantage  ×  aggregation weight  ×  which-knobs
 
 Take two **correct** answers in RLVR with the **same advantage** (+1), one short and one long (Lambert's example). Under per-sequence normalization, every token of the short one gets a bigger push, so the model learns "be correct **and short**" more strongly than "be correct and long."
 
+Aggregation isn't the only source of length drift. Human preference labels lean toward longer answers too (verbosity bias), so a reward model trained on them pays for length directly. See `../lecture-8-preference-data/04-open-questions-in-rlhf-data.md`, and the length-fixes table in `../lecture-9-over-optimization/` (`05`).
+
 The sign of the advantage matters too. This is the core argument of the Dr. GRPO paper, which goes beyond the slides: for a **wrong** answer (negative advantage), per-sequence normalization **penalizes each token of a long wrong answer less** than a short wrong one. So being wrong at length is punished more gently, and wrong answers can drift **longer** over training. Per-sequence normalization leans toward short correct answers and long wrong ones, which is why people saw lengths change in ways they hadn't intended. Per-token and fixed-length normalization remove that 1/|a_i| factor.
 
 **None of these is "correct" in general.** Each is a choice about what one unit of credit should be: one answer, or one token. It's worth knowing which one your codebase uses, because it shows up as length trends in training.
@@ -160,6 +162,8 @@ Illustrative ranges, which vary by model size, task and algorithm. "W&B" = **Wei
 
 Also: **watch held-out eval scores, and actually read sample outputs** for coherence. Numbers can look fine while the text turns into nonsense.
 
+*(Cross-lecture note: during over-optimization `reward/mean` looks **healthy**. It keeps climbing while true quality falls, so it can't warn you on its own. You need a held-out reward model or periodic evals to catch it: `../lecture-9-over-optimization/03-signatures-of-over-optimization-and-misalignment.md`. When and how evals run relative to the loop: `../lecture-12-evaluation/00-map.md`.)*
+
 Lambert: GRPO-style training is "much simpler to [monitor] than PPO. The reward should be going up. Your KL distance should look reasonable. You should not have loss spikes. You don't want too much clipping. You don't want wildly unpredictable generation length, like collapse or exponential increase."
 
 ---
@@ -174,6 +178,8 @@ Lambert: GRPO-style training is "much simpler to [monitor] than PPO. The reward 
 - **Implicit regularization:** papers like "SFT Memorizes, RL Generalizes" and "RL's Razor"
 
 Lambert's RLVR example of reward hacking: with a verifier for instruction-following, a model might discover that "if I output no tokens, I always get reward." This happens in RLVR too, not only with learned reward models.
+
+**Now covered:** over-optimization and Goodhart in `../lecture-9-over-optimization/` (`02`, with the signatures table in `03`); KL directions, estimators and implicit regularization (RL's Razor) in `../lecture-10-regularization/`.
 
 *(The slides also contain a commented-out, unused slide on "Extended RL training practices": removing KL for long runs, asymmetric clipping (DAPO), progressive difficulty, keeping prompts where 20–80% of completions succeed, and dropping prompts where all completions are right or all wrong. It isn't presented, but it previews the reasoning lecture. The last two items follow directly from GRPO's "no signal when all rewards are equal.")*
 

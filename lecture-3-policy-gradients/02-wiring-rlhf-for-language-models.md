@@ -46,6 +46,8 @@ The **reference model** is a frozen snapshot of the policy at the very start of 
 - The reward model likes confident language → the policy states wrong things confidently.
 - Lambert's example: "I've seen many cases where the model just starts generating gibberish" that still scores well.
 
+The reward model's blind spots usually come from the preference labels themselves (length, confidence, sycophancy, formatting): see the bias list in `../lecture-8-preference-data/04-open-questions-in-rlhf-data.md`. What over-optimization looks like as it happens: `../lecture-9-over-optimization/02-over-optimization-and-goodharts-law.md`.
+
 The reference model is an **anchor**. It represents "a sensible model that writes normal text." The policy is allowed to improve, but it gets penalized for drifting too far from that anchor.
 
 An analogy from your supervised-learning background: this plays the role of **regularization** (like an L2 penalty that keeps weights near zero). Here, though, it keeps the model's *behavior* near the starting model's behavior instead of keeping the weights small.
@@ -123,6 +125,11 @@ This makes the trade-off explicit: the model can earn more reward-model score by
 *(Detail you can skip: an individual token's KL can be negative, when the policy finds a token less likely than the reference did. Averaged over many samples, the true KL is always ≥ 0. This per-token number is a sample estimate of the true KL, the same "estimate from samples" idea as the policy gradient.)*
 
 Lambert notes that this gets covered in more depth in the later lectures on over-optimization and regularization.
+
+- Over-optimization (the proxy-vs-true-quality curve with KL on the x-axis): `../lecture-9-over-optimization/02-over-optimization-and-goodharts-law.md`.
+- Regularization: why this penalty is a **reverse** KL (the direction depends on which model you sample from: here, the policy), the k1/k2/k3 per-token estimators, and when β = 0 is survivable: `../lecture-10-regularization/`.
+- DPO's "static" KL, measured on fixed data rather than the policy's own samples: `../lecture-6-dpo/05-dpo-weaknesses-and-likelihood-displacement.md`.
+- On-policy distillation uses this exact per-token term with the teacher in π_ref's place: `../lecture-7-synthetic-data/02-teacher-student-knowledge-distillation.md`.
 
 ---
 
